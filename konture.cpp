@@ -16,7 +16,6 @@ using namespace cv;
 using namespace std;
 
 Mat K_Means(Mat Input, int K);
-int getMaxAreaContourId(vector <vector<cv::Point>> contours);
 
 RNG rng(12345);
 
@@ -24,7 +23,7 @@ int main ()
 {
     //Create a window with suitable name and size
     namedWindow( "RGB", 1 );
-    namedWindow( "Contour", 1 );
+    //namedWindow( "Contour", 1 );
 
     //The Mat class of OpenCV library is used to store the values of an image. It represents an n-dimensional array and is used to store image data of grayscale or color images...
     Mat img, hsv, binary, binary1, binary2, binary3, binary4, binary5, imgToProcess;
@@ -32,10 +31,10 @@ int main ()
     //Read the input image and show it
     //img = imread("stop_sign.jpg");
     //img = imread("priority_sign.png");
-    //img = imread("crosswalk_sign.png");
+    img = imread("crosswalk_sign.png");
     //img = imread("parking_sign.png");
     //img = imread("proceed_straight_sign.png");
-    img = imread("one_way.png");
+    //img = imread("one_way.png");
     //img = imread("danger_sign.png");
     //img = imread("no_parking_sign.png");
     //img = imread("no_priority_sign.png");
@@ -45,10 +44,12 @@ int main ()
     //img = imread("black_spot_sign.png");
 
     imshow("RGB", img);
+    waitKey(0);
 
     //Convert RGB image into HSV and show it
     cvtColor(img, hsv, CV_BGR2HSV);
-    imshow("HSV",hsv);
+    imshow("HSV", hsv);
+    waitKey(0);
 
 
     //Get binary image(black and white)
@@ -68,7 +69,7 @@ int main ()
     //Range for Yellow
     inRange(hsv, Scalar(21, 150, 150), Scalar(33, 255, 255), binary4);
 
-    //Range for black
+    //Range for Black
     //inRange(hsv, Scalar(0, 0, 200), Scalar(180, 255, 255), binary5);
 
     //Adding every element from one array to another
@@ -79,6 +80,7 @@ int main ()
     //add(binary5, imgToProcess, imgToProcess, noArray(), 8);
 
     imshow("Binaries", imgToProcess);
+    waitKey(0);
 
 
     //Find contours from binary image
@@ -87,7 +89,7 @@ int main ()
 
     findContours(imgToProcess, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
-    int max_ind_of_contour = getMaxAreaContourId(contours);
+    //int max_ind_of_contour = getMaxAreaContourId(contours);
 
     Mat mask = Mat::zeros( imgToProcess.size(), CV_8UC3 );
 
@@ -101,7 +103,10 @@ int main ()
         }
     }
 
+    //drawContours(mask, contours, max_ind_of_contour, Scalar(255, 255, 255), cv::FILLED);
+
     imshow("Filled Mask", mask);
+    waitKey(0);
 
 
     //Change background color
@@ -117,6 +122,7 @@ int main ()
     }
 
     imshow("Change background color", img);
+    waitKey(0);
 
     //bitwise_and(mask, img, img);
     //imshow("After bitwise AND", img);
@@ -136,10 +142,12 @@ int main ()
     int max_height;
     int max_width;
 
+
+    //Find rectangle with max area
     for( size_t i = 0; i < contours.size(); i++ ){
         approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );                //Poly approximation
         boundRect[i] = boundingRect( Mat(contours_poly[i]) );                       //Squares for countures
-        minEnclosingCircle( contours_poly[i], center[i], radius[i] );               //Circles for countures
+        //minEnclosingCircle( contours_poly[i], center[i], radius[i] );               //Circles for countures
         area[i]= contourArea(Mat(contours_poly[i]));                                //Area ???
 
         int pom = boundRect[i].width * boundRect[i].height;
@@ -177,17 +185,19 @@ int main ()
         }
 
         //ellipse( drawing, minEllipse[i], color, 2, 8 );// ellipse
+        //TODO dodaj za pravougaonike ogranicenje
         rectangle( drawing, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0 );
     }
 
     imshow("Contour", drawing);
-
+    waitKey(0);
 
     //Crop image
 
     //first rows then columns
     Mat cropped_image = img(Range(max_y, (max_y + max_height)), Range(max_x, (max_x + max_width)));
     imshow("Cropped image", cropped_image);
+    waitKey(0);
 
     //Segmentation
     int Clusters = 4;
@@ -237,16 +247,3 @@ Mat K_Means(Mat Input, int K) {
         }
     return new_image;
 }
-
-int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
-    double maxArea = 0;
-    int maxAreaContourId = -1;
-    for (int j = 0; j < contours.size(); j++) {
-        double newArea = cv::contourArea(contours.at(j));
-        if (newArea > maxArea) {
-            maxArea = newArea;
-            maxAreaContourId = j;
-        } // End if
-    } // End for
-    return maxAreaContourId;
-} // End function
